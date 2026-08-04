@@ -1,0 +1,24 @@
+# Chinu AI — default settings (placeholder)
+#
+# This file defines default, non-secret configuration values.
+# Secrets (API keys, etc.) belong in `.env`, not here.
+# Loaded by config_loader.py (not yet implemented).
+
+app:
+  name: "Chinu AI"
+  environment: "development"
+
+voice:
+  wake_word: "hey_chinu"
+  stt_engine: "faster_whisper"
+  tts_engine: "edge_tts"
+
+brain:
+  llm_provider: "anthropic"
+
+automation:
+  confirmation_required: true
+
+dashboard:
+  host: "127.0.0.1"
+  port: 8765

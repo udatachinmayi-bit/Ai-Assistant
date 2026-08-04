@@ -1,0 +1,86 @@
+# ==== Python ====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ==== Virtual environments ====
+.venv/
+venv/
+env/
+ENV/
+
+# ==== Environment / secrets ====
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# ==== Testing / coverage ====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+
+# ==== IDE / editor ====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ==== Chinu runtime data (never commit user data or logs) ====
+data/*
+!data/README.md
+!data/.gitkeep
+logs/*
+!logs/README.md
+!logs/.gitkeep
+*.log
+*.sqlite3
+*.db
+
+# ==== Local AI models (downloaded, not committed) ====
+models/**/*
+!models/**/README.md
+!models/**/.gitkeep
+!models/**/manifest.json
+!models/**/MANIFEST.md
+*.gguf
+*.onnx
+*.bin
+*.pt
+*.ckpt
+*.safetensors
+
+# ==== Audio cache / temp files ====
+*.wav
+*.mp3
+tmp/
+temp/
+
+# ==== Dashboard frontend build artifacts ====
+node_modules/
+src/chinu/dashboard/frontend/dist/
+src/chinu/dashboard/frontend/build/
+
+# ==== Installer build output ====
+installer/build/
+installer/dist/
+*.exe
+*.msi
+
+# ==== OS ====
+desktop.ini
