@@ -15,6 +15,8 @@ class PluginMetadata:
         version: Version string (semver).
         description: Short description of plugin functionality.
         author: Plugin author name/organization.
+        dependencies: Dictionary of other plugin names to required semver ranges.
+        required_chinu_version: Semver range for the required Chinu core version.
         capabilities: List of intent/capability strings this plugin handles.
         permissions: List of required permissions (e.g. 'filesystem', 'browser').
     """
@@ -23,6 +25,8 @@ class PluginMetadata:
     version: str = "0.1.0"
     description: str = ""
     author: str = ""
+    dependencies: dict[str, str] = field(default_factory=dict)
+    required_chinu_version: str = "*"
     capabilities: list[str] = field(default_factory=list)
     permissions: list[str] = field(default_factory=list)
 
