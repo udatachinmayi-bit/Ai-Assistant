@@ -1,17 +1,17 @@
-"""Interfaces for the Voice Pipeline."""
+"""Interfaces for the voice service."""
 
-from abc import ABC, abstractmethod
+import abc
 
 
-class IVoiceManager(ABC):
-    """Interface for the main voice pipeline manager."""
+class IVoiceService(abc.ABC):
+    """Interface for the Voice Service."""
 
-    @abstractmethod
+    @abc.abstractmethod
     async def start(self) -> None:
-        """Start the voice pipeline."""
-        pass
+        """Start the voice service."""
+        raise NotImplementedError
 
-    @abstractmethod
+    @abc.abstractmethod
     async def stop(self) -> None:
-        """Stop the voice pipeline."""
-        pass
+        """Stop the voice service."""
+        raise NotImplementedError

@@ -18,16 +18,9 @@ from chinu.core.service_registry import ServiceRegistry
 from chinu.logging_system.logger import configure_logging, get_logger
 from chinu.plugins.interfaces.plugin import IPluginLoader
 from chinu.plugins.plugin_manager.loader import PluginLoader
-from chinu.runtime.assistant_runtime import AssistantRuntime
 from chinu.runtime.interfaces import IAssistantRuntime
-from chinu.voice.interfaces import IVoiceManager
-from chinu.voice.voice_manager import VoiceManager
-from chinu.brain.interfaces import IBrainService
-from chinu.brain.brain_service import BrainService
-from chinu.tts.interfaces import ITextToSpeechService
-from chinu.tts.tts_service import TextToSpeechService
-from chinu.memory.interfaces import IMemoryService
-from chinu.memory.short_term.memory_service import MemoryService
+from chinu.voice.interfaces import IVoiceService
+from chinu.voice.voice_service import VoiceService
 
 logger = get_logger("application")
 
@@ -110,13 +103,14 @@ class Application:
         self._container.register_singleton(ILifecycleManager, self._lifecycle)
         self._container.register_singleton(IPluginLoader, self._plugin_loader)
 
-        # Register runtime services
-        self._container.register_singleton(IAssistantRuntime, AssistantRuntime)
-        self._container.register_singleton(IVoiceManager, VoiceManager)
-        self._container.register_singleton(IBrainService, BrainService)
-        self._container.register_singleton(IMemoryService, MemoryService)
-        self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
-        self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
+        # Register runtime services - TEMPORARILY DISABLED until these services are implemented
+        # These will be added incrementally as we build each component
+        # self._container.register_singleton(IAssistantRuntime, AssistantRuntime)
+        # self._container.register_singleton(IVoiceManager, VoiceManager)
+        # self._container.register_singleton(IBrainService, BrainService)
+        # self._container.register_singleton(IMemoryService, MemoryService)
+        # self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
+        self._container.register_singleton(IVoiceService, VoiceService)
 
         # Register core instances in Service Registry
         self._service_registry.register("config", self._config, SettingsConfig)
@@ -138,8 +132,9 @@ class Application:
         logger.info("Starting Chinu AI Engine")
         await self._lifecycle.startup()
 
-        # Initialize and start the AssistantRuntime
-        self._container.resolve(IAssistantRuntime)
+        # Initialize and start the AssistantRuntime - TEMPORARILY DISABLED
+        # This will be re-enabled when AssistantRuntime is implemented
+        # self._container.resolve(IAssistantRuntime)
 
         # Load installed plugins if plugins directory exists
         installed_plugins_dir = Path(__file__).parent.parent / "plugins" / "installed"

@@ -5,10 +5,7 @@ import asyncio
 from chinu.core.interfaces.lifecycle import ILifecycleManager
 from chinu.logging_system.logger import get_logger
 from chinu.runtime.interfaces import IAssistantRuntime
-from chinu.voice.interfaces import IVoiceManager
-from chinu.brain.interfaces import IBrainService
-from chinu.memory.interfaces import IMemoryService
-from chinu.tts.interfaces import ITextToSpeechService
+from chinu.voice.interfaces import IVoiceService
 
 logger = get_logger("assistant_runtime")
 
@@ -18,10 +15,7 @@ class AssistantRuntime(IAssistantRuntime):
     def __init__(
         self,
         lifecycle_manager: ILifecycleManager,
-        voice_manager: IVoiceManager,
-        brain_service: IBrainService,
-        memory_service: IMemoryService,
-        tts_service: ITextToSpeechService,
+        voice_service: IVoiceService,
     ) -> None:
         """Initialize the AssistantRuntime.
 
@@ -29,10 +23,7 @@ class AssistantRuntime(IAssistantRuntime):
             lifecycle_manager: The application's lifecycle manager.
         """
         self._lifecycle = lifecycle_manager
-        self._voice_manager = voice_manager
-        self._brain_service = brain_service
-        self._memory_service = memory_service
-        self._tts_service = tts_service
+        self._voice_service = voice_service
         self._task: asyncio.Task | None = None
 
         # Register hooks to be called by the Application lifecycle
@@ -60,10 +51,7 @@ class AssistantRuntime(IAssistantRuntime):
             return
 
         logger.info("AssistantRuntime is stopping...")
-        await self._tts_service.stop()
-        await self._memory_service.stop()
-        await self._brain_service.stop()
-        await self._voice_manager.stop()
+        await self._voice_service.stop()
         self._task.cancel()
         try:
             await self._task
