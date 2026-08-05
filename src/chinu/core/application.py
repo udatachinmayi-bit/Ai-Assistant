@@ -103,14 +103,12 @@ class Application:
         self._container.register_singleton(ILifecycleManager, self._lifecycle)
         self._container.register_singleton(IPluginLoader, self._plugin_loader)
 
-        # Register runtime services - TEMPORARILY DISABLED until these services are implemented
-        # These will be added incrementally as we build each component
-        # self._container.register_singleton(IAssistantRuntime, AssistantRuntime)
-        # self._container.register_singleton(IVoiceManager, VoiceManager)
-        # self._container.register_singleton(IBrainService, BrainService)
-        # self._container.register_singleton(IMemoryService, MemoryService)
-        # self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
-        self._container.register_singleton(IVoiceService, VoiceService)
+        # Register runtime services
+        # FIXED: VoiceService only takes config parameter
+        self._container.register_singleton(
+            IVoiceService,
+            lambda: VoiceService(self._config)
+        )
 
         # Register core instances in Service Registry
         self._service_registry.register("config", self._config, SettingsConfig)
@@ -132,9 +130,15 @@ class Application:
         logger.info("Starting Chinu AI Engine")
         await self._lifecycle.startup()
 
-        # Initialize and start the AssistantRuntime - TEMPORARILY DISABLED
-        # This will be re-enabled when AssistantRuntime is implemented
-        # self._container.resolve(IAssistantRuntime)
+        try:
+            logger.info("Initializing Voice Service...")
+            voice_service = self._container.resolve(IVoiceService)
+            await voice_service.start()
+            logger.info("Voice Service Started.")
+        except Exception as e:
+            logger.error(f"Failed to start Voice Service: {e}")
+            await self.stop()
+            return
 
         # Load installed plugins if plugins directory exists
         installed_plugins_dir = Path(__file__).parent.parent / "plugins" / "installed"
@@ -147,6 +151,12 @@ class Application:
         """Execute graceful shutdown sequence."""
         logger.info("Stopping Chinu AI Engine")
         await self._event_bus.publish_async("app.stopping")
+
+        try:
+            voice_service = self._container.resolve(IVoiceService)
+            await voice_service.stop()
+        except Exception as e:
+            logger.error(f"Failed to stop Voice Service gracefully: {e}")
 
         await self._plugin_loader.unload_all_plugins()
         await self._lifecycle.shutdown()

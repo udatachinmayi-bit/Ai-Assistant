@@ -8,6 +8,12 @@ license = { text = "TBD" }
 authors = [
     { name = "Chinu AI Project" }
 ]
+dependencies = [
+    "faster-whisper",
+    "torch",
+    "torchaudio",
+    "silero-vad"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

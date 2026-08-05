@@ -30,6 +30,7 @@ class VoiceConfig(BaseModel):
     stt_model_path: str = Field(default="tiny.en", description="Path to the STT model")
     stt_device: str = Field(default="cpu", description="Device for STT model (e.g., 'cpu', 'cuda')")
     stt_compute_type: str = Field(default="int8", description="Compute type for STT model")
+    whisper_model: str = Field(default="base", description="Whisper model size")
     mic_device: int | None = Field(default=None, description="Microphone device index")
     mic_sample_rate: int = Field(default=16000, description="Microphone sample rate")
     mic_block_size: int = Field(default=1024, description="Microphone block size")
