@@ -8,26 +8,9 @@ from chinu.runtime.interfaces import IAssistantRuntime
 from chinu.voice.interfaces import IVoiceManager
 from chinu.brain.interfaces import IBrainService
 from chinu.memory.interfaces import IMemoryService
+from chinu.tts.interfaces import ITextToSpeechService
 
 logger = get_logger("assistant_runtime")
-
-
-# Placeholders for future services
-class VoiceService:
-    """Placeholder for voice interaction services."""
-
-
-class BrainService:
-    """Placeholder for AI logic and decision-making."""
-
-
-class MemoryService:
-    """Placeholder for short-term and long-term memory."""
-
-
-class TTSService:
-    """Placeholder for text-to-speech services."""
-
 
 class AssistantRuntime(IAssistantRuntime):
     """Orchestrates the main assistant services and keeps the application alive."""
@@ -38,7 +21,7 @@ class AssistantRuntime(IAssistantRuntime):
         voice_manager: IVoiceManager,
         brain_service: IBrainService,
         memory_service: IMemoryService,
-        # tts_service: TTSService,
+        tts_service: ITextToSpeechService,
     ) -> None:
         """Initialize the AssistantRuntime.
 
@@ -49,7 +32,7 @@ class AssistantRuntime(IAssistantRuntime):
         self._voice_manager = voice_manager
         self._brain_service = brain_service
         self._memory_service = memory_service
-        # self._tts_service = tts_service
+        self._tts_service = tts_service
         self._task: asyncio.Task | None = None
 
         # Register hooks to be called by the Application lifecycle
@@ -65,6 +48,8 @@ class AssistantRuntime(IAssistantRuntime):
         logger.info("AssistantRuntime is starting...")
         await self._voice_manager.start()
         await self._brain_service.start()
+        await self._memory_service.start()
+        await self._tts_service.start()
         self._task = asyncio.create_task(self._run())
         logger.info("AssistantRuntime has started.")
 

@@ -23,9 +23,9 @@ class TestAssistantPipeline(unittest.TestCase):
         self.app.bootstrap()
         
         # Get instances of services from the container
-        self.event_bus = self.app.container.resolve(EventBus)
-        self.memory_service = self.app.container.resolve("IMemoryService")
-        self.tts_service = self.app.container.resolve("ITextToSpeechService")
+        self.event_bus = self.app.container.resolve(IEventBus)
+        self.memory_service = self.app.container.resolve(IMemoryService)
+        self.tts_service = self.app.container.resolve(ITextToSpeechService)
 
     def tearDown(self) -> None:
         """Tear down the test case."""

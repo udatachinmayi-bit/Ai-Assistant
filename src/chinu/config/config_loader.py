@@ -27,6 +27,13 @@ class VoiceConfig(BaseModel):
     wake_word: str = Field(default="hey_chinu", description="Active wake word trigger")
     stt_engine: str = Field(default="faster_whisper", description="Speech-to-text engine")
     tts_engine: str = Field(default="edge_tts", description="Text-to-speech engine")
+    stt_model_path: str = Field(default="tiny.en", description="Path to the STT model")
+    stt_device: str = Field(default="cpu", description="Device for STT model (e.g., 'cpu', 'cuda')")
+    stt_compute_type: str = Field(default="int8", description="Compute type for STT model")
+    mic_device: int | None = Field(default=None, description="Microphone device index")
+    mic_sample_rate: int = Field(default=16000, description="Microphone sample rate")
+    mic_block_size: int = Field(default=1024, description="Microphone block size")
+    mic_channels: int = Field(default=1, description="Microphone channels")
 
 
 class BrainConfig(BaseModel):
@@ -58,6 +65,19 @@ class LoggingConfig(BaseModel):
     log_to_console: bool = Field(default=True, description="Enable stdout console logging")
 
 
+class EdgeTTSConfig(BaseModel):
+    """Edge-TTS specific settings."""
+    voice: str = Field(default="en-US-AriaNeural", description="Voice to use for speech synthesis")
+    rate: str = Field(default="+0%", description="Speaking rate adjustment")
+    volume: str = Field(default="+0%", description="Speaking volume adjustment")
+
+
+class TTSConfig(BaseModel):
+    """Text-to-Speech configuration settings."""
+    provider: str = Field(default="edge_tts", description="TTS provider to use")
+    edge_tts: EdgeTTSConfig = Field(default_factory=EdgeTTSConfig)
+
+
 class SettingsConfig(BaseSettings):
     """Root configuration model combining all module settings."""
 
@@ -67,6 +87,7 @@ class SettingsConfig(BaseSettings):
     automation: AutomationConfig = Field(default_factory=AutomationConfig)
     dashboard: DashboardConfig = Field(default_factory=DashboardConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    tts: TTSConfig = Field(default_factory=TTSConfig)
 
     model_config = SettingsConfigDict(
         env_file=".env",

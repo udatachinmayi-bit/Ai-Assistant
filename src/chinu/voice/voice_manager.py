@@ -10,7 +10,7 @@ import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
 
-from chinu.config.settings import VoiceSettings
+from chinu.config.config_loader import SettingsConfig
 from chinu.core.interfaces.events import IEventBus
 from chinu.logging_system.logger import get_logger
 from chinu.voice.interfaces import IVoiceManager
@@ -21,7 +21,7 @@ logger = get_logger("voice_manager")
 class VoiceManager(IVoiceManager):
     """Manages the voice pipeline, including microphone input and STT."""
 
-    def __init__(self, event_bus: IEventBus, config: VoiceSettings) -> None:
+    def __init__(self, event_bus: IEventBus, config: SettingsConfig) -> None:
         """Initialize the VoiceManager.
 
         Args:
@@ -29,7 +29,7 @@ class VoiceManager(IVoiceManager):
             config: The voice settings.
         """
         self._event_bus = event_bus
-        self._config = config
+        self._config = config.voice
         self._is_running = False
         self._worker_thread: Thread | None = None
         self._audio_queue: queue.Queue = queue.Queue()

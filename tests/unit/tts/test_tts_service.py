@@ -15,13 +15,15 @@ class TestTextToSpeechService(unittest.TestCase):
     def setUp(self) -> None:
         """Set up the test case."""
         self.event_bus = AsyncMock(spec=IEventBus)
-        self.config = TTSSettings(
-            provider="edge_tts",
-            edge_tts=EdgeTTSConfig(
-                voice="en-US-AriaNeural",
-                rate="+0%",
-                volume="+0%",
-            ),
+        self.config = SettingsConfig(
+            tts=TTSConfig(
+                provider="edge_tts",
+                edge_tts=EdgeTTSConfig(
+                    voice="en-US-AriaNeural",
+                    rate="+0%",
+                    volume="+0%",
+                ),
+            )
         )
         
         # Patch the EdgeTTS class

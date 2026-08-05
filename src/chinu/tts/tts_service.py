@@ -2,7 +2,7 @@
 
 import asyncio
 
-from chinu.config.settings import TTSSettings
+from chinu.config.config_loader import SettingsConfig
 from chinu.core.interfaces.events import IEventBus
 from chinu.logging_system.logger import get_logger
 from chinu.tts.interfaces import ITextToSpeechService
@@ -14,11 +14,11 @@ logger = get_logger("tts_service")
 class TextToSpeechService(ITextToSpeechService):
     """Service for converting text to speech."""
 
-    def __init__(self, event_bus: IEventBus, config: TTSSettings) -> None:
+    def __init__(self, event_bus: IEventBus, config: SettingsConfig) -> None:
         """Initialize the TextToSpeechService."""
         self._event_bus = event_bus
-        self._config = config
-        self._tts_engine = EdgeTTS(config.edge_tts)
+        self._config = config.tts
+        self._tts_engine = EdgeTTS(config.tts.edge_tts)
         self._is_running = False
 
     async def start(self) -> None:

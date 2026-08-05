@@ -16,7 +16,7 @@ class TestVoiceManager(unittest.TestCase):
     def setUp(self) -> None:
         """Set up the test case."""
         self.event_bus = MagicMock(spec=EventBus)
-        self.config = VoiceSettings(
+        voice_config = VoiceConfig(
             stt_model_path="tiny.en",
             stt_device="cpu",
             stt_compute_type="int8",
@@ -25,6 +25,7 @@ class TestVoiceManager(unittest.TestCase):
             mic_block_size=1024,
             mic_channels=1,
         )
+        self.config = SettingsConfig(voice=voice_config)
 
         # Patch WhisperModel to avoid downloading the model during tests
         with patch("chinu.voice.voice_manager.WhisperModel") as self.mock_whisper:

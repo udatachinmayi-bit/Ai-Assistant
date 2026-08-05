@@ -24,6 +24,8 @@ from chinu.voice.interfaces import IVoiceManager
 from chinu.voice.voice_manager import VoiceManager
 from chinu.brain.interfaces import IBrainService
 from chinu.brain.brain_service import BrainService
+from chinu.tts.interfaces import ITextToSpeechService
+from chinu.tts.tts_service import TextToSpeechService
 from chinu.memory.interfaces import IMemoryService
 from chinu.memory.short_term.memory_service import MemoryService
 
@@ -113,6 +115,7 @@ class Application:
         self._container.register_singleton(IVoiceManager, VoiceManager)
         self._container.register_singleton(IBrainService, BrainService)
         self._container.register_singleton(IMemoryService, MemoryService)
+        self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
         self._container.register_singleton(ITextToSpeechService, TextToSpeechService)
 
         # Register core instances in Service Registry
