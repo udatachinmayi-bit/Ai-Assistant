@@ -11,6 +11,7 @@ import sounddevice as sd
 from faster_whisper import WhisperModel
 from rapidfuzz import fuzz
 
+from chinu.actions.action_router import ActionRouter
 from chinu.config.config_loader import SettingsConfig
 from chinu.logging_system.logger import get_logger
 from chinu.voice.interfaces import IVoiceService
@@ -57,20 +58,8 @@ class VoiceService(IVoiceService):
         self.wake_words = ["chinu", "sister"]
         self.wake_threshold = 70  # Fuzzy match threshold (0-100)
         
-        # Command mappings
-        self.commands = {
-            "open chrome": ["chrome", "google chrome", "open chrome"],
-            "open edge": ["edge", "microsoft edge", "open edge"],
-            "open vscode": ["vscode", "vs code", "visual studio code", "open vscode"],
-            "open notepad": ["notepad", "open notepad"],
-            "open calculator": ["calculator", "calc", "open calculator"],
-            "open whatsapp": ["whatsapp", "open whatsapp"],
-            "open youtube": ["youtube", "open youtube"],
-            "open spotify": ["spotify", "open spotify"],
-            "open terminal": ["terminal", "command prompt", "cmd", "powershell", "open terminal"],
-            "open file explorer": ["explorer", "file explorer", "open explorer"],
-            "open settings": ["settings", "control panel", "open settings"],
-        }
+        # Action Router
+        self.action_router = ActionRouter()
 
     def _audio_callback(self, indata, frames, time_info, status) -> None:
         """Callback for sounddevice input stream."""
