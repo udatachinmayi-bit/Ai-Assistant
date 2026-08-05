@@ -2,9 +2,8 @@
 
 import asyncio
 import queue
-import subprocess
+import string  # ADD THIS IMPORT
 import time
-from pathlib import Path
 
 import numpy as np
 import sounddevice as sd
@@ -40,12 +39,8 @@ class VoiceService(IVoiceService):
         # Audio settings
         self.sample_rate = 16000
         self.channels = 1
-        self.record_duration = 3.0  # Record 3 seconds at a time
+        self.record_duration = 3.0
         self.samples_per_chunk = int(self.sample_rate * self.record_duration)
-        
-        # Rolling window settings
-        self.rolling_window_size = self.samples_per_chunk
-        self.audio_buffer = np.array([], dtype=np.int16)
         
         # Queue for audio data
         self.audio_queue = queue.Queue()
@@ -56,10 +51,12 @@ class VoiceService(IVoiceService):
         
         # Wake word configuration
         self.wake_words = ["chinu", "sister"]
-        self.wake_threshold = 70  # Fuzzy match threshold (0-100)
+        self.wake_threshold = 70
         
         # Action Router
-        self.action_router = ActionRouter()
+        self.router = ActionRouter()
+        
+        logger.info("✅ VoiceService initialized with ActionRouter")
 
     def _audio_callback(self, indata, frames, time_info, status) -> None:
         """Callback for sounddevice input stream."""
@@ -68,7 +65,7 @@ class VoiceService(IVoiceService):
         self.audio_queue.put(indata.copy())
 
     def _detect_wake_word(self, text: str) -> tuple[str | None, str]:
-        """Detect if text contains a wake word using fuzzy matching."""
+        """Detect if text contains a wake word using improved fuzzy matching."""
         if not text.strip():
             return None, ""
         
@@ -76,110 +73,59 @@ class VoiceService(IVoiceService):
         if not words:
             return None, ""
         
-        first_word = words[0]
-        
-        # Check each wake word
-        for wake in self.wake_words:
-            # Check if first word matches wake word (fuzzy)
-            if fuzz.ratio(first_word, wake) >= self.wake_threshold:
-                # Return the matched wake word and the rest of the command
-                command = " ".join(words[1:]) if len(words) > 1 else ""
-                return wake, command
-            
-            # Also check if any word in the text contains the wake word
-            if any(fuzz.ratio(word, wake) >= self.wake_threshold for word in words):
-                # Find the position of the matched word
-                for i, word in enumerate(words):
-                    if fuzz.ratio(word, wake) >= self.wake_threshold:
-                        command = " ".join(words[i+1:]) if i+1 < len(words) else ""
-                        return wake, command
+        # Check each word against wake words
+        for i, word in enumerate(words):
+            for wake in self.wake_words:
+                # Use multiple fuzzy matching strategies
+                scores = [
+                    fuzz.ratio(word, wake),
+                    fuzz.partial_ratio(word, wake),
+                    fuzz.token_sort_ratio(word, wake),
+                ]
+                max_score = max(scores)
+                
+                if max_score >= self.wake_threshold:
+                    # Found a match
+                    command = " ".join(words[i+1:]) if i+1 < len(words) else ""
+                    logger.debug(f"Wake word match: '{word}' → '{wake}' (score: {max_score})")
+                    return wake, command
         
         return None, ""
 
-    def _find_command(self, text: str) -> str | None:
-        """Find a matching command in the text."""
-        text_lower = text.lower().strip()
+    async def _handle_transcription(self, text: str) -> None:
+        """Handle transcribed text - detect wake word and execute commands."""
+        # Detect wake word
+        wake_word, command_text = self._detect_wake_word(text)
         
-        # Check each command
-        for command_name, triggers in self.commands.items():
-            for trigger in triggers:
-                if trigger in text_lower:
-                    return command_name
-        
-        return None
-
-    def _execute_command(self, command: str) -> bool:
-        """Execute a command on Windows."""
-        logger.info(f"Executing command: {command}")
-        
-        try:
-            if command == "open chrome":
-                subprocess.Popen(["start", "chrome"], shell=True)
-                logger.info("✅ Opening Chrome...")
-                return True
+        if wake_word:
+            logger.info(f"🎯 Wake word '{wake_word}' detected!")
+            
+            if command_text:
+                # CLEAN THE COMMAND - Remove punctuation and extra spaces
+                command_text = command_text.lower().strip()
+                command_text = command_text.translate(
+                    str.maketrans("", "", string.punctuation)
+                )
+                command_text = " ".join(command_text.split())
                 
-            elif command == "open edge":
-                subprocess.Popen(["start", "microsoft-edge:"], shell=True)
-                logger.info("✅ Opening Edge...")
-                return True
+                logger.info(f"📝 Command: '{command_text}'")
                 
-            elif command == "open vscode":
-                subprocess.Popen(["code"], shell=True)
-                logger.info("✅ Opening VS Code...")
-                return True
-                
-            elif command == "open notepad":
-                subprocess.Popen(["notepad.exe"], shell=True)
-                logger.info("✅ Opening Notepad...")
-                return True
-                
-            elif command == "open calculator":
-                subprocess.Popen(["calc.exe"], shell=True)
-                logger.info("✅ Opening Calculator...")
-                return True
-                
-            elif command == "open whatsapp":
-                # Try to open WhatsApp from start menu
-                subprocess.Popen(["start", "whatsapp:"], shell=True)
-                logger.info("✅ Opening WhatsApp...")
-                return True
-                
-            elif command == "open youtube":
-                subprocess.Popen(["start", "https://www.youtube.com"], shell=True)
-                logger.info("✅ Opening YouTube...")
-                return True
-                
-            elif command == "open spotify":
-                subprocess.Popen(["start", "spotify:"], shell=True)
-                logger.info("✅ Opening Spotify...")
-                return True
-                
-            elif command == "open terminal":
-                subprocess.Popen(["start", "cmd"], shell=True)
-                logger.info("✅ Opening Terminal...")
-                return True
-                
-            elif command == "open file explorer":
-                subprocess.Popen(["explorer.exe"], shell=True)
-                logger.info("✅ Opening File Explorer...")
-                return True
-                
-            elif command == "open settings":
-                subprocess.Popen(["start", "ms-settings:"], shell=True)
-                logger.info("✅ Opening Settings...")
-                return True
-                
+                # Execute the command using the router (synchronous)
+                try:
+                    result = self.router.execute(command_text)
+                    if result:
+                        logger.info(f"✅ Command executed successfully: '{command_text}'")
+                    else:
+                        logger.warning(f"❌ Failed to execute command: '{command_text}'")
+                except Exception as e:
+                    logger.error(f"Error executing command: {e}")
             else:
-                logger.warning(f"Unknown command: {command}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Failed to execute command '{command}': {e}")
-            return False
+                logger.info("👂 Listening for command...")
+        else:
+            logger.debug(f"Ignored: '{text}' (no wake word)")
 
     async def _process_audio_chunk(self) -> None:
         """Process a single audio chunk - record and transcribe."""
-        # Collect audio for 3 seconds
         audio_chunks = []
         samples_collected = 0
         
@@ -205,7 +151,7 @@ class VoiceService(IVoiceService):
         try:
             segments, _ = self.model.transcribe(
                 audio_float32,
-                language="en",
+                language=None,  # Auto-detect language (supports multiple languages)
                 beam_size=1,
                 vad_filter=False,
                 temperature=0.0
@@ -221,33 +167,6 @@ class VoiceService(IVoiceService):
                 
         except Exception as e:
             logger.error(f"Whisper transcription failed: {e}")
-
-    async def _handle_transcription(self, text: str) -> None:
-        """Handle transcribed text - detect wake word and execute commands."""
-        # Detect wake word
-        wake_word, command_text = self._detect_wake_word(text)
-        
-        if wake_word:
-            logger.info(f"🎯 Wake word '{wake_word}' detected!")
-            
-            if command_text:
-                logger.info(f"📝 Command: '{command_text}'")
-                
-                # Find and execute the command
-                command = self._find_command(command_text)
-                if command:
-                    success = self._execute_command(command)
-                    if success:
-                        logger.info(f"✅ Command '{command}' executed successfully")
-                    else:
-                        logger.warning(f"❌ Failed to execute command '{command}'")
-                else:
-                    logger.info(f"🤔 Unknown command: '{command_text}'")
-                    # Here you could add AI response for unknown commands
-            else:
-                logger.info("👂 Listening for command...")
-        else:
-            logger.debug(f"Ignored: '{text}' (no wake word)")
 
     async def _process_audio_loop(self) -> None:
         """Main loop that continuously processes audio chunks."""
@@ -278,7 +197,7 @@ class VoiceService(IVoiceService):
                 channels=self.channels,
                 samplerate=self.sample_rate,
                 dtype="int16",
-                blocksize=int(self.sample_rate * 0.1),  # 100ms chunks
+                blocksize=int(self.sample_rate * 0.1),
             )
             self.stream.start()
             logger.info("✅ Microphone opened successfully.")
