@@ -9,6 +9,7 @@ import inspect
 import signal
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any  # <-- ADD THIS LINE
 
 from chinu.core.interfaces.exceptions import LifecycleError
 from chinu.core.interfaces.lifecycle import (
