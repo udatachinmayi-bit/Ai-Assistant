@@ -33,27 +33,37 @@ class IntentParser:
         # The parser will iterate through this list and use the first matching pattern.
         # More specific patterns should be placed before more general ones.
         self.intent_patterns = [
-            # 1. Browser Profile Intent
+            # 1. Conversational Intents (High Priority)
+            (re.compile(r"^(who are you|what is your name)$"), lambda m: {"intent": "get_identity"}),
+            (re.compile(r"^(how are you|how are you doing)$"), lambda m: {"intent": "get_status"}),
+            (re.compile(r"^(what can you do|what are your capabilities)$"), lambda m: {"intent": "get_capabilities"}),
+            (re.compile(r"^(good morning|good afternoon|good evening)$"), lambda m: {"intent": "greeting"}),
+            (re.compile(r"^(good night)$"), lambda m: {"intent": "good_night"}),
+            (re.compile(r"^(thank you|thanks)$"), lambda m: {"intent": "thanks"}),
+            (re.compile(r"^(bye|exit|stop listening|sleep)$"), lambda m: {"intent": "exit"}),
+            (re.compile(r"^(wake up)$"), lambda m: {"intent": "wake_up"}),
+
+            # 2. Browser Profile Intent
             # Example: "open chrome with ganesh", "start firefox using work", "launch edge guest"
             (re.compile(rf"^{open_verbs} (\w+) (?:with|using) (\w+)$"), self._parse_browser_profile),
             (re.compile(rf"^{open_verbs} (\w+) (guest)$"), self._parse_browser_profile),
 
-            # 2. YouTube Play Intent
+            # 3. YouTube Play Intent
             # Example: "play believer", "youtube believer", "search believer on youtube"
             (re.compile(rf"^play (.+?)(?: on youtube)?$"), self._parse_youtube_play),
             (re.compile(rf"^youtube (.+)$"), self._parse_youtube_play),
             (re.compile(rf"^search (.+) on youtube$"), self._parse_youtube_play),
 
-            # 3. Google Search Intent
+            # 4. Google Search Intent
             # Example: "google ai", "find ai", "search ai on google", "search ai"
             (re.compile(rf"^{search_verbs} (.+)$"), self._parse_google_search),
             (re.compile(rf"^search (.+) on google$"), self._parse_google_search),
 
-            # 4. Open App/Website Intent (a general "open" command)
+            # 5. Open App/Website Intent (a general "open" command)
             # Example: "open chrome", "launch youtube"
             (re.compile(rf"^{open_verbs} (.+)$"), self._parse_open),
 
-            # 5. Windows Commands (simple, direct matches)
+            # 6. Windows Commands (simple, direct matches)
             (re.compile(r"^lock computer$"), lambda m: {"intent": "lock_pc"}),
             (re.compile(r"^shutdown(?: pc)?$"), lambda m: {"intent": "shutdown_pc"}),
             (re.compile(r"^restart(?: pc)?$"), lambda m: {"intent": "restart_pc"}),
