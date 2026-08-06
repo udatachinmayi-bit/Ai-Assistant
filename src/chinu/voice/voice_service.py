@@ -2,7 +2,6 @@
 
 import asyncio
 import queue
-import string  # ADD THIS IMPORT
 import time
 
 import numpy as np
@@ -13,6 +12,7 @@ from rapidfuzz import fuzz
 from chinu.actions.action_router import ActionRouter
 from chinu.config.config_loader import SettingsConfig
 from chinu.logging_system.logger import get_logger
+from chinu.nlu.intent_parser import IntentParser  # Import IntentParser
 from chinu.voice.interfaces import IVoiceService
 
 logger = get_logger("voice_service")
@@ -55,8 +55,11 @@ class VoiceService(IVoiceService):
         
         # Action Router
         self.router = ActionRouter()
+
+        # Intent Parser
+        self.intent_parser = IntentParser()
         
-        logger.info("✅ VoiceService initialized with ActionRouter")
+        logger.info("✅ VoiceService initialized with ActionRouter and IntentParser")
 
     def _audio_callback(self, indata, frames, time_info, status) -> None:
         """Callback for sounddevice input stream."""
@@ -98,27 +101,27 @@ class VoiceService(IVoiceService):
         wake_word, command_text = self._detect_wake_word(text)
         
         if wake_word:
-            logger.info(f"🎯 Wake word '{wake_word}' detected!")
+            logger.info(f"🎯 Wake word: '{wake_word}'")
             
             if command_text:
-                # CLEAN THE COMMAND - Remove punctuation and extra spaces
-                command_text = command_text.lower().strip()
-                command_text = command_text.translate(
-                    str.maketrans("", "", string.punctuation)
-                )
-                command_text = " ".join(command_text.split())
+                logger.info(f"💬 Command: '{command_text}'")
                 
-                logger.info(f"📝 Command: '{command_text}'")
+                # Parse the command to get an intent
+                intent = self.intent_parser.parse(command_text)
+                logger.info(f"🧠 Intent: {intent}")
                 
-                # Execute the command using the router (synchronous)
-                try:
-                    result = self.router.execute(command_text)
-                    if result:
-                        logger.info(f"✅ Command executed successfully: '{command_text}'")
-                    else:
-                        logger.warning(f"❌ Failed to execute command: '{command_text}'")
-                except Exception as e:
-                    logger.error(f"Error executing command: {e}")
+                # Execute only if the intent is known
+                if intent['intent'] != "unknown":
+                    try:
+                        result = self.router.execute(intent)
+                        if result:
+                            logger.info(f"✅ Command executed successfully for intent: {intent}")
+                        else:
+                            logger.warning(f"❌ Failed to execute command for intent: {intent}")
+                    except Exception as e:
+                        logger.error(f"Error executing command for intent {intent}: {e}")
+                else:
+                    logger.warning("Unknown command, not calling ActionRouter.")
             else:
                 logger.info("👂 Listening for command...")
         else:
